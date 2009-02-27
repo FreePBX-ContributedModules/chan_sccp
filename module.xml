@@ -1,0 +1,14 @@
+<module>
+	<rawname>chan_sccp</rawname>
+	<name>SCCP Phone</name>
+	<version>0.0.1</version>
+	<type>setup</type>
+	<category>Internal Options &amp; Configuration</category>
+	<description>chan-sccp-b helper module - http://tese.se/chan_sccp.txt</description>
+	<menuitems>
+		<chan_sccp>SCCP Phones</chan_sccp>
+	</menuitems>
+	<changelog>*0.0.1* Alfa Work</changelog>
+	<location></location>
+	<md5sum></md5sum>
+</module>

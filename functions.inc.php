@@ -61,7 +61,7 @@ function chan_sccp_list() {
 
 function chan_sccp_get($chan_sccp_id) {
 	global $db;
-	$sql = "SELECT id, mac, ext, type FROM sccp_mac WHERE id = " . (int) $chan_sccp_id;
+	$sql = "SELECT id, mac, ext, type, speeds FROM sccp_mac WHERE id = " . (int) $chan_sccp_id;
 	$row = $db->getRow($sql, DB_FETCHMODE_ASSOC);
 	if(DB::IsError($row)) {
 		die_freepbx($row->getMessage()."<br><br>Error selecting row from jabber");
@@ -70,16 +70,17 @@ function chan_sccp_get($chan_sccp_id) {
 	return $row;
 }
 
-function chan_sccp_add($mac, $phone_type, $ext) {
+function chan_sccp_add($mac, $phone_type, $ext, $speeds) {
 	global $db;
 
 	$ext = (int) $ext;
 	$phone_type = $db->escapeSimple($phone_type);
 	$mac = $db->escapeSimple(strtoupper($mac));
+	$speeds = $db->escapeSimple(strtoupper($speeds));
 
 	$sql = "INSERT INTO sccp_mac
-					(mac, type, ext)
-					VALUES ('$mac', '$phone_type', $ext)";
+					(mac, type, ext, speeds)
+					VALUES ('$mac', '$phone_type', $ext, '$speeds')";
 
 	$result = $db->query($sql);
 	if(DB::IsError($result)) {
@@ -101,16 +102,17 @@ function chan_sccp_delete($chan_sccp_id) {
 	}
 }
 
-function chan_sccp_edit($chan_sccp_id, $mac, $phone_type, $ext) {
+function chan_sccp_edit($chan_sccp_id, $mac, $phone_type, $ext, $speeds) {
 	global $db;
 
 	$chan_sccp_id = (int) $chan_sccp_id;
 	$ext = (int) $ext;
 	$phone_type = $db->escapeSimple($phone_type);
 	$mac = $db->escapeSimple(strtoupper($mac));
+	$speeds = $db->escapeSimple(strtoupper($speeds));
 
 	$sql = "UPDATE sccp_mac
-					SET mac = '$mac', type = '$phone_type', ext = $ext
+					SET mac = '$mac', type = '$phone_type', ext = $ext, speeds = '$speeds'
 					WHERE id = $chan_sccp_id";
 
 	$result = $db->query($sql);
@@ -280,12 +282,33 @@ function chan_sccp_create_line($ext, $name){
 }
 
 function make_speeds($speeds, $type = '7960'){
+	global $db;
 	$str = '';
-	foreach ($speeds as $speed){
-		if ($type == '7905' || $type == '7912')
-			$str .= "{$speed['ext']},{$speed['name']}\n";
-		else
-			$str .= "{$speed['ext']},{$speed['name']},{$speed['ext']}@from-internal\n";
+
+	$speeds_arr = explode(';', $speeds);
+	foreach ($speeds_arr as $speed){
+		$speed = $db->escapeSimple($speed);
+
+		$sql = "SELECT d.`description`
+						FROM devices d
+						WHERE d.`id` = '$speed'";
+
+		$res = $db->getone($sql);
+		if(DB::IsError($res)) {
+			die_freepbx($res->getMessage().$sql);
+		}
+
+		if ($res != ''){
+			$res = str_replace(array(',', ';'), '', $res);
+			$str .= "$speed,$res";
+			if ($type != '7905' && $type != '7912')
+				$str .= ",$speed@from-internal";
+		}else{
+			$str .= "$speed,$speed";
+		}
+
+
+		$str .= ';';
 	}
 	return $str;
 }
@@ -298,7 +321,7 @@ function chan_sccp_create_device($mac, $ext, $type, $name, $speeds){
 	$ext = (int) $ext;
 	$type = $db->escapeSimple($type);
 	$name = $db->escapeSimple($name);
-	$speeds = $db->escapeSimple($speeds);
+	$speeds = make_speeds($speeds, $type);
 
 	$sql = "SELECT COUNT(*)
 					FROM sccpdevice
@@ -337,17 +360,8 @@ function chan_sccp_create_tftp_SEP($mac, $cm_ip = ''){
 	$template = str_replace('{$cm_ip}', $cm_ip, $template);
 
 	$filename = '/tftpboot/SEP' . $mac . '.cnf.xml';
-	
-	$handle = fopen($filename, 'w');
+	file_put_contents($filename, $template);
 
-	if ($handle){
-		fwrite($handle, $template);
-		echo " $filename - OK<br>";
-		return true;
-	}
-
-	echo " Could not open $filename<br>";
-
-	return false;
+	return true;
 }
 ?>

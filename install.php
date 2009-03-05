@@ -24,7 +24,7 @@ $sql = "CREATE TABLE IF NOT EXISTS `sccpdevice` (
   `description` varchar(45) default NULL,
   `tzoffset` varchar(45) default NULL,
   `transfer` varchar(45) default 'on',
-  `speeddial` varchar(75) default NULL,
+  `speeddial` varchar(1024) default NULL,
   `cfwdall` varchar(45) default 'on',
   `cfwdbusy` varchar(45) default 'on',
   `dtmfmode` varchar(45) default 'inbound',

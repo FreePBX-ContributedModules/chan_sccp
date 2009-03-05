@@ -20,6 +20,7 @@ $chan_sccp_id = isset($_REQUEST['chan_sccp_id']) ? $_REQUEST['chan_sccp_id'] :  
 $mac = isset($_REQUEST['mac']) ? $_REQUEST['mac'] :  '';
 $phone_type = isset($_REQUEST['phone_type']) ? $_REQUEST['phone_type'] :  '';
 $ext = isset($_REQUEST['ext']) ? $_REQUEST['ext'] :  '';
+$speeds = isset($_REQUEST['speeds']) ? $_REQUEST['speeds'] :  '';
 
 if (isset($_REQUEST['goto0']) && $_REQUEST['goto0']) {
 	$dest = $_REQUEST[ $_REQUEST['goto0'].'0' ];
@@ -27,12 +28,12 @@ if (isset($_REQUEST['goto0']) && $_REQUEST['goto0']) {
 
 switch ($action) {
 	case 'add':
-		chan_sccp_add($mac, $phone_type, $ext);
+		chan_sccp_add($mac, $phone_type, $ext, $speeds);
 		needreload();
 		redirect_standard();
 	break;
 	case 'edit':
-		chan_sccp_edit($chan_sccp_id, $mac, $phone_type, $ext);
+		chan_sccp_edit($chan_sccp_id, $mac, $phone_type, $ext, $speeds);
 		needreload();
 		redirect_standard('extdisplay');
 	break;
@@ -69,6 +70,7 @@ if ($extdisplay) {
 	$mac = $row['mac'];
 	$ext = $row['ext'];
 	$phone_type = $row['type'];
+	$speeds = $row['speeds'];
 
 	echo "<h2>"._("Edit: ")."$mac ($phone_type)"."</h2>";
 } else {
@@ -96,6 +98,10 @@ echo $helptext;
 	<tr>
 		<td><a href="#" class="info"><?php echo _("FreePBX extension")?>:<span><?php echo _("Extension")?></span></a></td>
 		<td><input size="6" type="text" name="ext" value="<?php echo $ext; ?>" /></td> </tr>
+	<tr>
+	<tr>
+		<td><a href="#" class="info"><?php echo _("Speedials")?>:<span><?php echo _("Enter the extensions numbers or external numbers, seperated by ;")?></span></a></td>
+		<td><input size="60" type="text" name="speeds" value="<?php echo $speeds; ?>" /></td> </tr>
 	<tr>
 		<td colspan="2"><br><input name="Submit" type="submit" value="<?php echo _("Submit Changes")?>">
 			<?php if ($extdisplay) { echo '&nbsp;<input name="delete" type="submit" value="'._("Delete").'">'; } ?>

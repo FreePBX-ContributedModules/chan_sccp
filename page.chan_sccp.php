@@ -100,7 +100,7 @@ echo $helptext;
 		<td><input size="6" type="text" name="ext" value="<?php echo $ext; ?>" /></td> </tr>
 	<tr>
 	<tr>
-		<td><a href="#" class="info"><?php echo _("Speedials")?>:<span><?php echo _("Enter the extensions numbers or external numbers, seperated by ;")?></span></a></td>
+		<td><a href="#" class="info"><?php echo _("Speedials")?>:<span><?php echo _("Enter the extensions numbers or external numbers, seperated by ; To add Your own text use: number,text;")?></span></a></td>
 		<td><input size="60" type="text" name="speeds" value="<?php echo $speeds; ?>" /></td> </tr>
 	<tr>
 		<td colspan="2"><br><input name="Submit" type="submit" value="<?php echo _("Submit Changes")?>">

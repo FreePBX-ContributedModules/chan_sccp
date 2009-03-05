@@ -109,7 +109,7 @@ function chan_sccp_edit($chan_sccp_id, $mac, $phone_type, $ext, $speeds) {
 	$ext = (int) $ext;
 	$phone_type = $db->escapeSimple($phone_type);
 	$mac = $db->escapeSimple(strtoupper($mac));
-	$speeds = $db->escapeSimple(strtoupper($speeds));
+	$speeds = $db->escapeSimple($speeds);
 
 	$sql = "UPDATE sccp_mac
 					SET mac = '$mac', type = '$phone_type', ext = $ext, speeds = '$speeds'
@@ -287,20 +287,28 @@ function make_speeds($speeds, $type = '7960'){
 
 	$speeds_arr = explode(';', $speeds);
 	foreach ($speeds_arr as $speed){
+		$speed_arr = explode(',', $speed);
+		$speed = $speed_arr[0];
+		$desc = $speed_arr[1];
+
 		$speed = $db->escapeSimple($speed);
 
-		$sql = "SELECT d.`description`
-						FROM devices d
-						WHERE d.`id` = '$speed'";
+		if (!$desc){
+			$sql = "SELECT d.`description`
+							FROM devices d
+							WHERE d.`id` = '$speed'";
 
-		$res = $db->getone($sql);
-		if(DB::IsError($res)) {
-			die_freepbx($res->getMessage().$sql);
+			$res = $db->getone($sql);
+			if(DB::IsError($res)) {
+				die_freepbx($res->getMessage().$sql);
+			}
+
+			$desc = $res;
 		}
 
-		if ($res != ''){
-			$res = str_replace(array(',', ';'), '', $res);
-			$str .= "$speed,$res";
+		if ($desc != ''){
+			$desc = str_replace(array(',', ';'), '', $desc);
+			$str .= "$speed,$desc";
 			if ($type != '7905' && $type != '7912')
 				$str .= ",$speed@from-internal";
 		}else{
@@ -309,6 +317,7 @@ function make_speeds($speeds, $type = '7960'){
 
 
 		$str .= ';';
+		$desc = '';
 	}
 	return $str;
 }

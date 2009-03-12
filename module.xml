@@ -3,7 +3,7 @@
 	<name>SCCP Phone</name>
 	<version>0.0.1</version>
 	<type>setup</type>
-	<category>Internal Options &amp; Configuration</category>
+	<category>Third Party Addon</category>
 	<description>chan-sccp-b helper module - http://tese.se/chan_sccp.txt</description>
 	<menuitems>
 		<chan_sccp>SCCP Phones</chan_sccp>

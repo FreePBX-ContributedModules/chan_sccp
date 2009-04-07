@@ -64,7 +64,7 @@ function chan_sccp_get($chan_sccp_id) {
 	$sql = "SELECT id, mac, ext, type, speeds FROM sccp_mac WHERE id = " . (int) $chan_sccp_id;
 	$row = $db->getRow($sql, DB_FETCHMODE_ASSOC);
 	if(DB::IsError($row)) {
-		die_freepbx($row->getMessage()."<br><br>Error selecting row from jabber");
+		die_freepbx($row->getMessage()."<br><br>Error selecting row from sccp_mac");
 	}
 
 	return $row;
@@ -92,6 +92,31 @@ function chan_sccp_delete($chan_sccp_id) {
 	global $db;
 
 	$chan_sccp_id = (int) $chan_sccp_id;
+	
+	$sql = "SELECT mac, ext
+					FROM sccp_mac
+					WHERE id = $chan_sccp_id";
+					
+	$row = $db->getRow($sql, DB_FETCHMODE_ASSOC);
+	if(DB::IsError($row)) {
+		die_freepbx($row->getMessage()."<br><br>Error selecting row from sccp_mac");
+	}
+	
+	$sql = "DELETE FROM sccpline
+					WHERE id = " . (int) $row['ext'];
+	
+	$result = $db->query($sql);
+	if(DB::IsError($result)) {
+		die_freepbx($result->getMessage().$sql);
+	}
+
+	$sql = "DELETE FROM sccpdevice
+					WHERE name = 'SEP{$row['mac']}'";
+	
+	$result = $db->query($sql);
+	if(DB::IsError($result)) {
+		die_freepbx($result->getMessage().$sql);
+	}
 
 	$sql = "DELETE FROM sccp_mac
 					WHERE id = $chan_sccp_id";
@@ -121,108 +146,6 @@ function chan_sccp_edit($chan_sccp_id, $mac, $phone_type, $ext, $speeds) {
 	}
 }
 /*
-function chan_sccp_configpageinit($pagename) {
-	global $currentcomponent;
-
-	// Vi får fixa detta senare
-	return true;
-
-	$action = isset($_REQUEST['action'])?$_REQUEST['action']:null;
-	$extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
-	$extension = isset($_REQUEST['extension'])?$_REQUEST['extension']:null;
-	$tech_hardware = isset($_REQUEST['tech_hardware'])?$_REQUEST['tech_hardware']:null;
-
-	// We only want to hook 'users' or 'extensions' pages.
-	if ($pagename != 'users' && $pagename != 'extensions')
-		return true;
-	// On a 'new' user, 'tech_hardware' is set, and there's no extension. Hook into the page.
-	if ($tech_hardware != null || $pagename == 'users') {
-		chan_sccp_applyhooks();
-		$currentcomponent->addprocessfunc('chan_sccp_configprocess', 8);
-	} elseif ($action=="add") {
-		// We don't need to display anything on an 'add', but we do need to handle returned data.
-		$currentcomponent->addprocessfunc('chan_sccp_configprocess', 8);
-	} elseif ($extdisplay != '') {
-		// We're now viewing an extension, so we need to display _and_ process.
-		chan_sccp_applyhooks();
-		$currentcomponent->addprocessfunc('chan_sccp_configprocess', 8);
-	}
-}
-
-function chan_sccp_applyhooks() {
-	global $currentcomponent;
-
-	// Add the 'process' function - this gets called when the page is loaded, to hook into
-	// displaying stuff on the page.
-	$currentcomponent->addguifunc('chan_sccp_configpageload');
-}
-
-// This is called before the page is actually displayed, so we can use addguielem().
-function chan_sccp_configpageload() {
-	global $currentcomponent;
-
-	// Init vars from $_REQUEST[]
-	$action = isset($_REQUEST['action'])?$_REQUEST['action']:null;
-	$extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
-
-	// Don't display this stuff it it's on a 'This xtn has been deleted' page.
-	if ($action != 'del') {
-		$chan_sccp_rcpt = chan_sccp_user_get($extdisplay);
-
-		$section = _('SCCP Phone');
-		$msgInvalidjabber = _('Please enter a valid jabber Code');
-		$currentcomponent->addguielem($section, new gui_textbox('chan_sccp_rcpt', $chan_sccp_rcpt, _('Jabber ID'), _('The jabber code for this user. This will result in messages such as voiclangcode prompts to use the selected jabber if installed.'), "", $msgInvalidjabber, true));
-	}
-}
-
-function chan_sccp_configprocess() {
-	//create vars from the request
-	$action = isset($_REQUEST['action'])?$_REQUEST['action']:null;
-	$ext = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
-	$extn = isset($_REQUEST['extension'])?$_REQUEST['extension']:null;
-	$chan_sccp_rcpt = isset($_REQUEST['chan_sccp_rcpt'])?$_REQUEST['chan_sccp_rcpt']:null;
-
-	if ($ext==='') {
-		$extdisplay = $extn;
-	} else {
-		$extdisplay = $ext;
-	}
-	if ($action == "add" || $action == "edit") {
-		if (!isset($GLOBALS['abort']) || $GLOBALS['abort'] !== true) {
-			chan_sccp_user_update($extdisplay, $chan_sccp_rcpt);
-		}
-	} elseif ($action == "del") {
-		chan_sccp_user_del($extdisplay);
-	}
-}
-
-function chan_sccp_user_get($xtn) {
-	global $astman;
-
-	// Retrieve the jabber configuraiton from this user from ASTDB
-	$chan_sccp_rcpt = $astman->database_get("AMPUSER",$xtn."/chan_sccp_rcpt");
-
-	return $chan_sccp_rcpt;
-}
-
-function chan_sccp_user_update($ext, $chan_sccp_rcpt) {
-	global $astman;
-
-	if ($ena === 'disabled') {
-		chan_sccp_user_del($ext);
-	} else {
-		// Update the settings in ASTDB
-		$astman->database_put("AMPUSER",$ext."/chan_sccp_rcpt",$chan_sccp_rcpt);
-	}
-}
-
-function chan_sccp_user_del($ext) {
-	global $astman;
-
-	// Clean up the tree when the user is deleted
-	$astman->database_deltree("AMPUSER/$ext/chan_sccp_rcpt");
-}
-
 function chan_sccp_check_destinations($dest=true) {
 	global $active_modules;
 

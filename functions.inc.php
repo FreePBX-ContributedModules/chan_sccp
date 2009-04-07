@@ -51,7 +51,11 @@ function chan_sccp_get_config($engine) {
  */
 function chan_sccp_list() {
 	global $db;
-	$sql = "SELECT id, mac, ext, type FROM sccp_mac ORDER BY mac ";
+	
+	$sql = "SELECT id, mac, ext, type 
+					FROM sccp_mac 
+					ORDER BY ext";
+	
 	$results = $db->getAll($sql, DB_FETCHMODE_ASSOC);
 	if(DB::IsError($results)) {
 		die_freepbx($results->getMessage()."<br><br>Error selecting from sccp_mac");
@@ -61,7 +65,11 @@ function chan_sccp_list() {
 
 function chan_sccp_get($chan_sccp_id) {
 	global $db;
-	$sql = "SELECT id, mac, ext, type, speeds FROM sccp_mac WHERE id = " . (int) $chan_sccp_id;
+	
+	$sql = "SELECT id, mac, ext, type, speeds 
+					FROM sccp_mac 
+					WHERE id = " . (int) $chan_sccp_id;
+					
 	$row = $db->getRow($sql, DB_FETCHMODE_ASSOC);
 	if(DB::IsError($row)) {
 		die_freepbx($row->getMessage()."<br><br>Error selecting row from sccp_mac");
